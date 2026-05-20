@@ -12,7 +12,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// CORS — permet au front Angular d'appeler l'API
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFront", policy =>
@@ -21,9 +21,25 @@ builder.Services.AddCors(options =>
               .AllowAnyMethod());
 });
 
+// Logs
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 var app = builder.Build();
 
 // ── Middleware ────────────────────────────────────────────
+
+// Gestion globale des exceptions
+app.UseExceptionHandler(err => err.Run(async ctx =>
+{
+    ctx.Response.StatusCode = 500;
+    await ctx.Response.WriteAsJsonAsync(new
+    {
+        error = "Erreur interne du serveur",
+        status = 500
+    });
+}));
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

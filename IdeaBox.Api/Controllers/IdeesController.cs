@@ -11,16 +11,20 @@ namespace IdeaBox.Api.Controllers;
 public class IdeesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<IdeesController> _logger;
 
-    public IdeesController(AppDbContext context)
+    public IdeesController(AppDbContext context, ILogger<IdeesController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     // GET api/idees
     [HttpGet]
     public async Task<ActionResult<IEnumerable<IdeeListDto>>> GetAll()
     {
+        _logger.LogInformation("Récupération de toutes les idées");
+
         var idees = await _context.Idees
             .Include(i => i.Commentaires)
             .Include(i => i.Votes)
@@ -45,13 +49,18 @@ public class IdeesController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<IdeeDetailDto>> GetById(int id)
     {
+        _logger.LogInformation("Récupération de l'idée {Id}", id);
+
         var idee = await _context.Idees
             .Include(i => i.Commentaires)
             .Include(i => i.Votes)
             .FirstOrDefaultAsync(i => i.IdIdee == id);
 
         if (idee is null)
+        {
+            _logger.LogWarning("Idée {Id} introuvable", id);
             return NotFound();
+        }
 
         var dto = new IdeeDetailDto
         {
@@ -82,10 +91,15 @@ public class IdeesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<IdeeDetailDto>> Create(CreateIdeeDto dto)
     {
+        _logger.LogInformation("Création d'une idée par {Auteur}", dto.Auteur);
+
         var valeursPossibles = new[] { "basse", "moyenne", "haute" };
 
         if (!valeursPossibles.Contains(dto.Priorite) || !valeursPossibles.Contains(dto.Difficulte))
+        {
+            _logger.LogWarning("Priorité ou difficulté invalide : {Priorite} / {Difficulte}", dto.Priorite, dto.Difficulte);
             return BadRequest("Priorité ou difficulté invalide. Valeurs acceptées : basse, moyenne, haute.");
+        }
 
         var idee = new Idee
         {
@@ -101,6 +115,8 @@ public class IdeesController : ControllerBase
         _context.Idees.Add(idee);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Idée {Id} créée avec succès", idee.IdIdee);
+
         return CreatedAtAction(nameof(GetById), new { id = idee.IdIdee }, idee);
     }
 
@@ -108,13 +124,21 @@ public class IdeesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateIdeeDto dto)
     {
+        _logger.LogInformation("Mise à jour de l'idée {Id}", id);
+
         var idee = await _context.Idees.FindAsync(id);
         if (idee is null)
+        {
+            _logger.LogWarning("Idée {Id} introuvable pour mise à jour", id);
             return NotFound();
+        }
 
         var valeursPossibles = new[] { "basse", "moyenne", "haute" };
         if (!valeursPossibles.Contains(dto.Priorite) || !valeursPossibles.Contains(dto.Difficulte))
+        {
+            _logger.LogWarning("Priorité ou difficulté invalide : {Priorite} / {Difficulte}", dto.Priorite, dto.Difficulte);
             return BadRequest("Priorité ou difficulté invalide. Valeurs acceptées : basse, moyenne, haute.");
+        }
 
         idee.Titre            = dto.Titre;
         idee.Contenu          = dto.Contenu;
@@ -124,6 +148,8 @@ public class IdeesController : ControllerBase
 
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation("Idée {Id} mise à jour avec succès", id);
+
         return NoContent();
     }
 
@@ -131,12 +157,19 @@ public class IdeesController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
+        _logger.LogInformation("Suppression de l'idée {Id}", id);
+
         var idee = await _context.Idees.FindAsync(id);
         if (idee is null)
+        {
+            _logger.LogWarning("Idée {Id} introuvable pour suppression", id);
             return NotFound();
+        }
 
         _context.Idees.Remove(idee);
         await _context.SaveChangesAsync();
+
+        _logger.LogInformation("Idée {Id} supprimée avec succès", id);
 
         return NoContent();
     }
