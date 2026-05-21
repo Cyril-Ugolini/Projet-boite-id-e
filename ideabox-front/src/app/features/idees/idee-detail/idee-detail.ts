@@ -14,6 +14,12 @@ import { ToastModule } from 'primeng/toast';
 import { IdeeService } from '../../../core/services/idee.service';
 import { IdeeDetailModel, CreateCommentaire } from '../../../models/idee.model';
 
+/**
+ * Composant de détail d'une idée.
+ * Affiche le contenu complet d'une idée ainsi que ses commentaires et votes.
+ * Permet d'ajouter/supprimer des commentaires et de voter pour une idée.
+ * Route : /idees/:id
+ */
 @Component({
   selector: 'app-idee-detail',
   standalone: true,
@@ -35,15 +41,25 @@ import { IdeeDetailModel, CreateCommentaire } from '../../../models/idee.model';
 })
 export class IdeeDetailComponent implements OnInit {
 
+  /** Idée courante chargée depuis l'API, null pendant le chargement */
   idee: IdeeDetailModel | null = null;
 
+  /** Modèle du formulaire de création d'un nouveau commentaire */
   newCommentaire: CreateCommentaire = {
     contenu: '',
     auteur: ''
   };
 
+  /** Prénom de l'auteur saisi pour voter */
   auteurVote = '';
 
+  /**
+   * @param route    - Service Angular pour accéder aux paramètres de la route (:id)
+   * @param router   - Service Angular pour la navigation entre les vues
+   * @param ideeService       - Service HTTP pour les appels API idées/commentaires/votes
+   * @param confirmationService - Service PrimeNG pour les dialogues de confirmation
+   * @param messageService    - Service PrimeNG pour les notifications toast
+   */
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -52,11 +68,19 @@ export class IdeeDetailComponent implements OnInit {
     private messageService: MessageService
   ) {}
 
+  /**
+   * Initialisation du composant.
+   * Récupère l'id depuis l'URL et charge l'idée correspondante.
+   */
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.loadIdee(id);
   }
 
+  /**
+   * Charge une idée depuis l'API avec ses commentaires et votes.
+   * @param id - Identifiant de l'idée à charger
+   */
   loadIdee(id: number): void {
     this.ideeService.getIdee(id).subscribe({
       next: (data) => this.idee = data,
@@ -64,6 +88,11 @@ export class IdeeDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * Soumet le formulaire d'ajout de commentaire.
+   * Vérifie que le contenu et l'auteur sont renseignés avant l'envoi.
+   * Recharge l'idée après création pour afficher le nouveau commentaire.
+   */
   ajouterCommentaire(): void {
     if (!this.newCommentaire.contenu || !this.newCommentaire.auteur || !this.idee) return;
 
@@ -77,6 +106,11 @@ export class IdeeDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * Supprime un commentaire après confirmation de l'utilisateur.
+   * Utilise le ConfirmationService PrimeNG pour afficher un dialogue de confirmation.
+   * @param commentaireId - Identifiant du commentaire à supprimer
+   */
   supprimerCommentaire(commentaireId: number): void {
     this.confirmationService.confirm({
       message: 'Supprimer ce commentaire ?',
@@ -91,6 +125,11 @@ export class IdeeDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * Enregistre un vote pour l'idée courante.
+   * Gère le cas où l'auteur a déjà voté (409 Conflict).
+   * Recharge l'idée après vote pour mettre à jour le compteur.
+   */
   voter(): void {
     if (!this.auteurVote || !this.idee) return;
 
@@ -109,10 +148,19 @@ export class IdeeDetailComponent implements OnInit {
     });
   }
 
+  /**
+   * Navigue vers la liste des idées.
+   */
   retour(): void {
     this.router.navigate(['/idees']);
   }
 
+  /**
+   * Retourne la sévérité PrimeNG correspondant au niveau donné.
+   * Utilisé pour coloriser les tags priorité et difficulté.
+   * @param niveau - Valeur du niveau : 'basse' | 'moyenne' | 'haute'
+   * @returns Sévérité PrimeNG : 'success' | 'warn' | 'danger' | 'info'
+   */
   getSeverity(niveau: string): 'success' | 'info' | 'warn' | 'danger' {
     switch (niveau) {
       case 'haute': return 'danger';

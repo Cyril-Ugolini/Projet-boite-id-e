@@ -1,0 +1,19 @@
+/* Surcharges PrimeNG spécifiques */
+.commentaire-auteur {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.commentaire-date {
+  font-size: 0.8rem;
+  color: var(--p-text-muted-color);
+}
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh;
+  font-size: 2rem;
+  color: var(--p-primary-color);
+}

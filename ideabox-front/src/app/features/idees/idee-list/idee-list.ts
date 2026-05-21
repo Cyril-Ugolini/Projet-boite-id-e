@@ -13,6 +13,12 @@ import { FormsModule } from '@angular/forms';
 import { IdeeService } from '../../../core/services/idee.service';
 import { Idee, CreateIdee } from '../../../models/idee.model';
 
+/**
+ * Composant de liste des idées.
+ * Affiche toutes les idées sous forme de cards avec leurs métadonnées.
+ * Permet de créer une nouvelle idée via un dialogue modal.
+ * Route : /idees
+ */
 @Component({
   selector: 'app-idee-list',
   standalone: true,
@@ -33,9 +39,13 @@ import { Idee, CreateIdee } from '../../../models/idee.model';
 })
 export class IdeeListComponent implements OnInit {
 
+  /** Liste des idées chargées depuis l'API */
   idees: Idee[] = [];
+
+  /** Contrôle la visibilité du dialogue de création */
   showDialog = false;
 
+  /** Modèle du formulaire de création d'une nouvelle idée */
   newIdee: CreateIdee = {
     titre: '',
     contenu: '',
@@ -44,21 +54,34 @@ export class IdeeListComponent implements OnInit {
     difficulte: 'moyenne'
   };
 
+  /** Options disponibles pour les selects priorité et difficulté */
   niveaux = [
     { label: 'Basse', value: 'basse' },
     { label: 'Moyenne', value: 'moyenne' },
     { label: 'Haute', value: 'haute' }
   ];
 
+  /**
+   * @param ideeService - Service HTTP pour les appels API idées
+   * @param router      - Service Angular pour la navigation entre les vues
+   */
   constructor(
     private ideeService: IdeeService,
     private router: Router
   ) {}
 
+  /**
+   * Initialisation du composant.
+   * Charge la liste des idées au démarrage.
+   */
   ngOnInit(): void {
     this.loadIdees();
   }
 
+  /**
+   * Charge toutes les idées depuis l'API.
+   * Les idées sont triées par date de création décroissante (géré côté API).
+   */
   loadIdees(): void {
     this.ideeService.getIdees().subscribe({
       next: (data) => this.idees = data,
@@ -66,14 +89,26 @@ export class IdeeListComponent implements OnInit {
     });
   }
 
+  /**
+   * Navigue vers la page de détail d'une idée.
+   * @param id - Identifiant de l'idée à afficher
+   */
   ouvrirDetail(id: number): void {
     this.router.navigate(['/idees', id]);
   }
 
+  /**
+   * Ouvre le dialogue de création d'une nouvelle idée.
+   */
   ouvrirDialog(): void {
     this.showDialog = true;
   }
 
+  /**
+   * Soumet le formulaire de création d'une idée.
+   * Vérifie que le titre et l'auteur sont renseignés avant l'envoi.
+   * Ferme le dialogue et recharge la liste après création.
+   */
   creerIdee(): void {
     if (!this.newIdee.titre || !this.newIdee.auteur) return;
 
@@ -87,6 +122,12 @@ export class IdeeListComponent implements OnInit {
     });
   }
 
+  /**
+   * Retourne la sévérité PrimeNG correspondant au niveau donné.
+   * Utilisé pour coloriser les tags priorité et difficulté.
+   * @param niveau - Valeur du niveau : 'basse' | 'moyenne' | 'haute'
+   * @returns Sévérité PrimeNG : 'success' | 'warn' | 'danger' | 'info'
+   */
   getSeverity(niveau: string): 'success' | 'info' | 'warn' | 'danger' {
     switch (niveau) {
       case 'haute': return 'danger';
