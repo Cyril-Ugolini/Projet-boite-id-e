@@ -1,1 +1,80 @@
-<p>idee-detail works!</p>
+<div class="p-4" *ngIf="idee">
+
+  <p-toast />
+  <p-confirmDialog />
+
+  <!-- Header -->
+  <div class="flex align-items-center gap-3 mb-4">
+    <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" (onClick)="retour()" />
+    <h1 class="m-0">{{ idee.titre }}</h1>
+  </div>
+
+  <!-- Tags -->
+  <div class="flex gap-2 mb-4">
+    <p-tag [value]="'Priorité : ' + idee.priorite" [severity]="getSeverity(idee.priorite)" />
+    <p-tag [value]="'Difficulté : ' + idee.difficulte" [severity]="getSeverity(idee.difficulte)" />
+  </div>
+
+  <!-- Infos -->
+  <div class="flex gap-4 text-500 mb-4">
+    <span><i class="pi pi-user mr-1"></i>{{ idee.auteur }}</span>
+    <span><i class="pi pi-calendar mr-1"></i>{{ idee.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+    <span><i class="pi pi-thumbs-up mr-1"></i>{{ idee.nbVotes }} vote(s)</span>
+  </div>
+
+  <!-- Contenu -->
+  <p-card styleClass="mb-4">
+    <div [innerHTML]="idee.contenu"></div>
+  </p-card>
+
+  <!-- Vote -->
+  <p-card header="👍 Voter pour cette idée" styleClass="mb-4">
+    <div class="flex gap-2">
+      <input pInputText [(ngModel)]="auteurVote" placeholder="Votre prénom" class="flex-1" />
+      <p-button label="Voter" icon="pi pi-thumbs-up" (onClick)="voter()" />
+    </div>
+  </p-card>
+
+  <p-divider />
+
+  <!-- Commentaires -->
+  <h2>💬 Commentaires ({{ idee.commentaires.length }})</h2>
+
+  <!-- Ajouter un commentaire -->
+  <p-card styleClass="mb-4">
+    <div class="flex flex-column gap-2">
+      <input pInputText [(ngModel)]="newCommentaire.auteur" placeholder="Votre prénom" />
+      <textarea pTextarea [(ngModel)]="newCommentaire.contenu" rows="3" placeholder="Votre commentaire..."></textarea>
+      <p-button label="Ajouter" icon="pi pi-send" (onClick)="ajouterCommentaire()" />
+    </div>
+  </p-card>
+
+  <!-- Liste commentaires -->
+  <div *ngFor="let c of idee.commentaires">
+    <p-card styleClass="mb-2">
+      <div class="flex justify-content-between align-items-start">
+        <div>
+          <div class="font-bold mb-1">{{ c.auteur }}</div>
+          <div>{{ c.contenu }}</div>
+          <div class="text-400 text-sm mt-1">{{ c.dateCreation | date:'dd/MM/yyyy HH:mm' }}</div>
+        </div>
+        <p-button 
+          icon="pi pi-trash" 
+          severity="danger" 
+          [text]="true" 
+          (onClick)="supprimerCommentaire(c.idCommentaire)" />
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Aucun commentaire -->
+  <div *ngIf="idee.commentaires.length === 0" class="text-center text-500 p-4">
+    Aucun commentaire pour le moment.
+  </div>
+
+</div>
+
+<!-- Chargement -->
+<div *ngIf="!idee" class="text-center p-6">
+  <i class="pi pi-spin pi-spinner text-4xl"></i>
+</div>

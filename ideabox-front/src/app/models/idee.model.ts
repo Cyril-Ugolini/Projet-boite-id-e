@@ -9,7 +9,7 @@ export interface Idee {
   dateCreation: string;
 }
 
-export interface IdeeDetail extends Idee {
+export interface IdeeDetailModel extends Idee {
   contenu: string;
   dateModification: string;
   commentaires: Commentaire[];

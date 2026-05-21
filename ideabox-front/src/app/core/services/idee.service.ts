@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Idee, IdeeDetail, CreateIdee, UpdateIdee, Commentaire, CreateCommentaire, CreateVote } from '../../models/idee.model';
+import { Idee, IdeeDetailModel, CreateIdee, UpdateIdee, Commentaire, CreateCommentaire, CreateVote } from '../../models/idee.model';
 
 @Injectable({
   providedIn: 'root'
@@ -18,12 +18,12 @@ export class IdeeService {
     return this.http.get<Idee[]>(`${this.apiUrl}/idees`);
   }
 
-  getIdee(id: number): Observable<IdeeDetail> {
-    return this.http.get<IdeeDetail>(`${this.apiUrl}/idees/${id}`);
+  getIdee(id: number): Observable<IdeeDetailModel> {
+    return this.http.get<IdeeDetailModel>(`${this.apiUrl}/idees/${id}`);
   }
 
-  createIdee(idee: CreateIdee): Observable<IdeeDetail> {
-    return this.http.post<IdeeDetail>(`${this.apiUrl}/idees`, idee);
+  createIdee(idee: CreateIdee): Observable<IdeeDetailModel> {
+    return this.http.post<IdeeDetailModel>(`${this.apiUrl}/idees`, idee);
   }
 
   updateIdee(id: number, idee: UpdateIdee): Observable<void> {

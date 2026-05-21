@@ -1,1 +1,79 @@
-<p>idee-list works!</p>
+<div class="p-4">
+
+  <!-- Header -->
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h1 class="m-0">💡 Boîte à idées</h1>
+    <p-button label="Nouvelle idée" icon="pi pi-plus" (onClick)="ouvrirDialog()" />
+  </div>
+
+  <!-- Liste des idées -->
+  <div class="grid">
+    <div class="col-12 md:col-6 lg:col-4" *ngFor="let idee of idees">
+      <p-card [header]="idee.titre" styleClass="h-full cursor-pointer" (click)="ouvrirDetail(idee.idIdee)">
+        
+        <div class="flex gap-2 mb-3">
+          <p-tag [value]="'Priorité : ' + idee.priorite" [severity]="getSeverity(idee.priorite)" />
+          <p-tag [value]="'Difficulté : ' + idee.difficulte" [severity]="getSeverity(idee.difficulte)" />
+        </div>
+
+        <div class="flex gap-3 text-500">
+          <span><i class="pi pi-user mr-1"></i>{{ idee.auteur }}</span>
+          <span><i class="pi pi-comments mr-1"></i>{{ idee.nbCommentaires }}</span>
+          <span><i class="pi pi-thumbs-up mr-1"></i>{{ idee.nbVotes }}</span>
+        </div>
+
+        <div class="text-400 text-sm mt-2">
+          {{ idee.dateCreation | date:'dd/MM/yyyy HH:mm' }}
+        </div>
+
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Message si vide -->
+  <div *ngIf="idees.length === 0" class="text-center p-6 text-500">
+    <i class="pi pi-lightbulb text-4xl mb-3"></i>
+    <p>Aucune idée pour le moment. Soyez le premier !</p>
+  </div>
+
+</div>
+
+<!-- Dialog création -->
+<p-dialog header="Nouvelle idée" [(visible)]="showDialog" [modal]="true" [style]="{width: '500px'}">
+  
+  <div class="flex flex-column gap-3 pt-2">
+    
+    <div class="flex flex-column gap-1">
+      <label>Titre *</label>
+      <input pInputText [(ngModel)]="newIdee.titre" placeholder="Titre de l'idée" />
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <label>Contenu</label>
+      <textarea pTextarea [(ngModel)]="newIdee.contenu" rows="4" placeholder="Décrivez votre idée..."></textarea>
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <label>Auteur *</label>
+      <input pInputText [(ngModel)]="newIdee.auteur" placeholder="Votre prénom" />
+    </div>
+
+    <div class="flex gap-3">
+      <div class="flex flex-column gap-1 flex-1">
+        <label>Priorité</label>
+        <p-select [options]="niveaux" [(ngModel)]="newIdee.priorite" optionLabel="label" optionValue="value" />
+      </div>
+      <div class="flex flex-column gap-1 flex-1">
+        <label>Difficulté</label>
+        <p-select [options]="niveaux" [(ngModel)]="newIdee.difficulte" optionLabel="label" optionValue="value" />
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" (onClick)="showDialog = false" />
+    <p-button label="Créer" icon="pi pi-check" (onClick)="creerIdee()" />
+  </ng-template>
+
+</p-dialog>

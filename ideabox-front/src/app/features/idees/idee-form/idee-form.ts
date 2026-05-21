@@ -2,8 +2,9 @@ import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-idee-form',
+  standalone: true, 
   imports: [],
   templateUrl: './idee-form.html',
-  styleUrl: './idee-form.css',
+  styleUrls: ['./idee-form.css'], 
 })
 export class IdeeForm {}
