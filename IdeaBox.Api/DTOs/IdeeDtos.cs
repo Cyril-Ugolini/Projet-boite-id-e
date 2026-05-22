@@ -63,6 +63,12 @@ public class CreateCommentaireDto
     public string Auteur { get; set; } = string.Empty;
 }
 
+// Mise à jour d'un commentaire
+public class UpdateCommentaireDto
+{
+    public string Contenu { get; set; } = string.Empty;
+}
+
 // Création d'un vote
 public class CreateVoteDto
 {

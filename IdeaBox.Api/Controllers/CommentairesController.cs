@@ -78,4 +78,27 @@ public class CommentairesController : ControllerBase
 
         return NoContent();
     }
+
+    // PUT api/idees/5/commentaires/3
+    [HttpPut("{commentaireId}")]
+    public async Task<IActionResult> Update(int ideeId, int commentaireId, UpdateCommentaireDto dto)
+    {
+        _logger.LogInformation("Mise à jour du commentaire {CommentaireId} sur l'idée {IdeeId}", commentaireId, ideeId);
+
+        var commentaire = await _context.Commentaires
+            .FirstOrDefaultAsync(c => c.IdCommentaire == commentaireId && c.IdIdee == ideeId);
+
+        if (commentaire is null)
+    {
+        _logger.LogWarning("Commentaire {CommentaireId} introuvable pour mise à jour", commentaireId);
+        return NotFound();
+    }
+
+    commentaire.Contenu = dto.Contenu;
+    await _context.SaveChangesAsync();
+
+    _logger.LogInformation("Commentaire {CommentaireId} mis à jour avec succès", commentaireId);
+
+    return NoContent();
+}
 }
