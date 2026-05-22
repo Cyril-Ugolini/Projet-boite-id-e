@@ -1,1 +1,38 @@
-<p>idee-form works!</p>
+<p-dialog
+  header="✏️ Modifier l'idée"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{width: '520px'}"
+  (onHide)="fermer()">
+
+  <div class="flex flex-column gap-3 pt-2">
+
+    <div class="flex flex-column gap-1">
+      <label class="font-semibold text-sm">Titre *</label>
+      <input pInputText [(ngModel)]="formData.titre" placeholder="Titre de l'idée" />
+    </div>
+
+    <div class="flex gap-3">
+      <div class="flex flex-column gap-1 flex-1">
+        <label class="font-semibold text-sm">Priorité</label>
+        <p-select [options]="niveaux" [(ngModel)]="formData.priorite" optionLabel="label" optionValue="value" />
+      </div>
+      <div class="flex flex-column gap-1 flex-1">
+        <label class="font-semibold text-sm">Difficulté</label>
+        <p-select [options]="niveaux" [(ngModel)]="formData.difficulte" optionLabel="label" optionValue="value" />
+      </div>
+    </div>
+
+    <div class="flex flex-column gap-1">
+      <label class="font-semibold text-sm">Contenu</label>
+      <textarea pTextarea [(ngModel)]="formData.contenu" rows="5" placeholder="Décrivez votre idée..."></textarea>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" (onClick)="fermer()" />
+    <p-button label="Sauvegarder" icon="pi pi-check" (onClick)="sauvegarder()" />
+  </ng-template>
+
+</p-dialog>

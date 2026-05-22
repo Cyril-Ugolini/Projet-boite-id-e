@@ -1,25 +1,34 @@
-<div class="p-4" *ngIf="idee">
+<div class="detail-container p-4 mx-auto" style="max-width: 800px" *ngIf="idee">
 
   <p-toast />
   <p-confirmDialog />
 
+  <!-- Composant edition -->
+  <app-idee-form
+    *ngIf="showEditDialog"
+    [idee]="idee"
+    [(visible)]="showEditDialog"
+    (ideeMiseAJour)="onIdeeMiseAJour()">
+  </app-idee-form>
+
   <!-- Header -->
   <div class="flex align-items-center gap-3 mb-4">
     <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" (onClick)="retour()" />
-    <h1 class="m-0">{{ idee.titre }}</h1>
+    <h1 class="m-0 text-primary flex-1">{{ idee.titre }}</h1>
+    <p-button icon="pi pi-pencil" severity="secondary" label="Modifier" (onClick)="ouvrirEdition()" />
   </div>
 
   <!-- Tags -->
-  <div class="flex gap-2 mb-4">
+  <div class="flex gap-2 mb-3 flex-wrap">
     <p-tag [value]="'Priorité : ' + idee.priorite" [severity]="getSeverity(idee.priorite)" />
     <p-tag [value]="'Difficulté : ' + idee.difficulte" [severity]="getSeverity(idee.difficulte)" />
   </div>
 
-  <!-- Infos -->
-  <div class="flex gap-4 text-500 mb-4">
-    <span><i class="pi pi-user mr-1"></i>{{ idee.auteur }}</span>
-    <span><i class="pi pi-calendar mr-1"></i>{{ idee.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
-    <span><i class="pi pi-thumbs-up mr-1"></i>{{ idee.nbVotes }} vote(s)</span>
+  <!-- Métadonnées -->
+  <div class="flex gap-4 text-color-secondary text-sm mb-4">
+    <span class="flex align-items-center gap-1"><i class="pi pi-user"></i>{{ idee.auteur }}</span>
+    <span class="flex align-items-center gap-1"><i class="pi pi-calendar"></i>{{ idee.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+    <span class="flex align-items-center gap-1"><i class="pi pi-thumbs-up"></i>{{ idee.nbVotes }} vote(s)</span>
   </div>
 
   <!-- Contenu -->
@@ -29,7 +38,7 @@
 
   <!-- Vote -->
   <p-card header="👍 Voter pour cette idée" styleClass="mb-4">
-    <div class="flex gap-2">
+    <div class="flex gap-2 align-items-center">
       <input pInputText [(ngModel)]="auteurVote" placeholder="Votre prénom" class="flex-1" />
       <p-button label="Voter" icon="pi pi-thumbs-up" (onClick)="voter()" />
     </div>
@@ -38,9 +47,9 @@
   <p-divider />
 
   <!-- Commentaires -->
-  <h2>💬 Commentaires ({{ idee.commentaires.length }})</h2>
+  <h2 class="text-primary">💬 Commentaires ({{ idee.commentaires.length }})</h2>
 
-  <!-- Ajouter un commentaire -->
+  <!-- Formulaire ajout commentaire -->
   <p-card styleClass="mb-4">
     <div class="flex flex-column gap-2">
       <input pInputText [(ngModel)]="newCommentaire.auteur" placeholder="Votre prénom" />
@@ -50,31 +59,55 @@
   </p-card>
 
   <!-- Liste commentaires -->
-  <div *ngFor="let c of idee.commentaires">
-    <p-card styleClass="mb-2">
+  <p-card *ngFor="let c of idee.commentaires" styleClass="mb-3">
+
+    <!-- Mode lecture -->
+    <div *ngIf="commentaireEnEdition !== c.idCommentaire">
       <div class="flex justify-content-between align-items-start">
         <div>
-          <div class="font-bold mb-1">{{ c.auteur }}</div>
-          <div>{{ c.contenu }}</div>
-          <div class="text-400 text-sm mt-1">{{ c.dateCreation | date:'dd/MM/yyyy HH:mm' }}</div>
+          <div class="commentaire-auteur">{{ c.auteur }}</div>
+          <div class="mb-1">{{ c.contenu }}</div>
+          <div class="commentaire-date">
+            <i class="pi pi-calendar"></i>{{ c.dateCreation | date:'dd/MM/yyyy HH:mm' }}
+          </div>
         </div>
-        <p-button 
-          icon="pi pi-trash" 
-          severity="danger" 
-          [text]="true" 
-          (onClick)="supprimerCommentaire(c.idCommentaire)" />
+        <div class="flex gap-1">
+          <p-button
+            icon="pi pi-pencil"
+            severity="secondary"
+            [text]="true"
+            (onClick)="activerEdition(c.idCommentaire, c.contenu)" />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            (onClick)="supprimerCommentaire(c.idCommentaire)" />
+        </div>
       </div>
-    </p-card>
-  </div>
+    </div>
+
+    <!-- Mode edition -->
+    <div *ngIf="commentaireEnEdition === c.idCommentaire">
+      <div class="commentaire-auteur mb-2">{{ c.auteur }}</div>
+      <textarea pTextarea [(ngModel)]="contenuEdition" rows="3" class="w-full mb-2"></textarea>
+      <div class="flex gap-2 justify-content-end">
+        <p-button label="Annuler" severity="secondary" [text]="true" (onClick)="annulerEdition()" />
+        <p-button label="Sauvegarder" icon="pi pi-check" (onClick)="sauvegarderCommentaire(c.idCommentaire)" />
+      </div>
+    </div>
+
+  </p-card>
 
   <!-- Aucun commentaire -->
-  <div *ngIf="idee.commentaires.length === 0" class="text-center text-500 p-4">
-    Aucun commentaire pour le moment.
+  <div class="flex flex-column align-items-center text-color-secondary p-4"
+       *ngIf="idee.commentaires.length === 0">
+    <i class="pi pi-comments text-4xl mb-2"></i>
+    <p>Aucun commentaire pour le moment.</p>
   </div>
 
 </div>
 
 <!-- Chargement -->
-<div *ngIf="!idee" class="text-center p-6">
-  <i class="pi pi-spin pi-spinner text-4xl"></i>
+<div class="loading-state" *ngIf="!idee">
+  <i class="pi pi-spin pi-spinner"></i>
 </div>

@@ -92,6 +92,17 @@ export class IdeeService {
     return this.http.delete<void>(`${this.apiUrl}/idees/${ideeId}/commentaires/${commentaireId}`);
   }
 
+  /**
+ * Met à jour le contenu d'un commentaire existant.
+ * @param ideeId        - Identifiant de l'idée parente
+ * @param commentaireId - Identifiant du commentaire à modifier
+ * @param contenu       - Nouveau contenu du commentaire
+ * @returns Observable<void> - 204 No Content
+ */
+updateCommentaire(ideeId: number, commentaireId: number, contenu: string): Observable<void> {
+  return this.http.put<void>(`${this.apiUrl}/idees/${ideeId}/commentaires/${commentaireId}`, { contenu });
+}
+
   // ── Votes ──────────────────────────────────────────────
 
   /**
