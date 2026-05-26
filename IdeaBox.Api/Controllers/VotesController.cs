@@ -1,60 +1,78 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using IdeaBox.Api.Data;
 using IdeaBox.Api.DTOs;
-using IdeaBox.Api.Models;
+using IdeaBox.Api.Services;
 
 namespace IdeaBox.Api.Controllers;
 
+/// <summary>
+/// Controller REST pour la gestion des votes.
+/// Délègue la logique métier à IVoteService.
+/// </summary>
 [ApiController]
 [Route("api/idees/{ideeId}/votes")]
 public class VotesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IVoteService _voteService;
     private readonly ILogger<VotesController> _logger;
 
-    public VotesController(AppDbContext context, ILogger<VotesController> logger)
+    /// <summary>
+    /// Constructeur — injection du service et du logger.
+    /// </summary>
+    public VotesController(IVoteService voteService, ILogger<VotesController> logger)
     {
-        _context = context;
+        _voteService = voteService;
         _logger = logger;
     }
 
-    // POST api/idees/5/votes
+    /// <summary>
+    /// Récupère le nombre de votes d'une idée.
+    /// </summary>
+    /// <returns>200 OK | 404 Not Found</returns>
+    [HttpGet]
+    public async Task<IActionResult> GetNbVotes(int ideeId)
+    {
+        var nbVotes = await _voteService.GetNbVotesAsync(ideeId);
+
+        if (nbVotes is null)
+            return NotFound($"Idée {ideeId} introuvable.");
+
+        return Ok(new { nbVotes });
+    }
+
+    /// <summary>
+    /// Enregistre un vote pour une idée.
+    /// Retourne 409 Conflict si l'auteur a déjà voté.
+    /// </summary>
+    /// <returns>200 OK | 404 Not Found | 409 Conflict</returns>
     [HttpPost]
     public async Task<IActionResult> Vote(int ideeId, CreateVoteDto dto)
     {
-        _logger.LogInformation("Vote sur l'idée {IdeeId} par {Auteur}", ideeId, dto.Auteur);
+        var result = await _voteService.VoterAsync(ideeId, dto);
 
-        var idee = await _context.Idees.FindAsync(ideeId);
-        if (idee is null)
-        {
-            _logger.LogWarning("Idée {IdeeId} introuvable pour vote", ideeId);
+        if (result is null)
             return NotFound($"Idée {ideeId} introuvable.");
-        }
 
-        var dejaVote = await _context.Votes
-            .AnyAsync(v => v.IdIdee == ideeId && v.Auteur == dto.Auteur);
-
-        if (dejaVote)
-        {
-            _logger.LogWarning("Auteur {Auteur} a déjà voté pour l'idée {IdeeId}", dto.Auteur, ideeId);
+        if (result == -1)
             return Conflict("Vous avez déjà voté pour cette idée.");
-        }
 
-        var vote = new Vote
-        {
-            Auteur       = dto.Auteur,
-            IdIdee       = ideeId,
-            DateCreation = DateTime.UtcNow
-        };
+        return Ok(new { message = "Vote enregistré.", nbVotes = result });
+    }
 
-        _context.Votes.Add(vote);
-        await _context.SaveChangesAsync();
+    /// <summary>
+    /// Supprime le vote d'un auteur sur une idée.
+    /// </summary>
+    /// <returns>204 No Content | 404 Not Found</returns>
+    [HttpDelete("{auteur}")]
+    public async Task<IActionResult> SupprimerVote(int ideeId, string auteur)
+    {
+        var result = await _voteService.SupprimerVoteAsync(ideeId, auteur);
 
-        var nbVotes = await _context.Votes.CountAsync(v => v.IdIdee == ideeId);
+        if (result is null)
+            return NotFound($"Idée {ideeId} introuvable.");
 
-        _logger.LogInformation("Vote enregistré sur l'idée {IdeeId}, total votes : {NbVotes}", ideeId, nbVotes);
+        if (result == false)
+            return NotFound($"Vote de {auteur} introuvable.");
 
-        return Ok(new { message = "Vote enregistré.", nbVotes });
+        return NoContent();
     }
 }

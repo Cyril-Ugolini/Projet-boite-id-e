@@ -1,104 +1,62 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using IdeaBox.Api.Data;
 using IdeaBox.Api.DTOs;
-using IdeaBox.Api.Models;
+using IdeaBox.Api.Services;
 
 namespace IdeaBox.Api.Controllers;
 
+/// <summary>
+/// Controller REST pour la gestion des commentaires.
+/// Délègue la logique métier à ICommentaireService.
+/// </summary>
 [ApiController]
 [Route("api/idees/{ideeId}/commentaires")]
 public class CommentairesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ICommentaireService _commentaireService;
     private readonly ILogger<CommentairesController> _logger;
 
-    public CommentairesController(AppDbContext context, ILogger<CommentairesController> logger)
+    /// <summary>
+    /// Constructeur — injection du service et du logger.
+    /// </summary>
+    public CommentairesController(ICommentaireService commentaireService, ILogger<CommentairesController> logger)
     {
-        _context = context;
+        _commentaireService = commentaireService;
         _logger = logger;
     }
 
-    // POST api/idees/5/commentaires
+    /// <summary>Ajoute un commentaire sur une idée.</summary>
+    /// <returns>201 Created | 404 Not Found</returns>
     [HttpPost]
     public async Task<ActionResult<CommentaireDto>> Create(int ideeId, CreateCommentaireDto dto)
     {
-        _logger.LogInformation("Ajout d'un commentaire sur l'idée {IdeeId} par {Auteur}", ideeId, dto.Auteur);
-
-        var idee = await _context.Idees.FindAsync(ideeId);
-        if (idee is null)
-        {
-            _logger.LogWarning("Idée {IdeeId} introuvable pour ajout commentaire", ideeId);
+        var commentaire = await _commentaireService.CreateAsync(ideeId, dto);
+        if (commentaire is null)
             return NotFound($"Idée {ideeId} introuvable.");
-        }
 
-        var commentaire = new Commentaire
-        {
-            Contenu      = dto.Contenu,
-            Auteur       = dto.Auteur,
-            IdIdee       = ideeId,
-            DateCreation = DateTime.UtcNow
-        };
-
-        _context.Commentaires.Add(commentaire);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Commentaire {IdCommentaire} créé avec succès", commentaire.IdCommentaire);
-
-        var result = new CommentaireDto
-        {
-            IdCommentaire = commentaire.IdCommentaire,
-            Contenu       = commentaire.Contenu,
-            Auteur        = commentaire.Auteur,
-            DateCreation  = commentaire.DateCreation
-        };
-
-        return CreatedAtAction(nameof(Create), new { ideeId }, result);
+        return CreatedAtAction(nameof(Create), new { ideeId }, commentaire);
     }
 
-    // DELETE api/idees/5/commentaires/3
-    [HttpDelete("{commentaireId}")]
-    public async Task<IActionResult> Delete(int ideeId, int commentaireId)
+    /// <summary>Met à jour un commentaire existant.</summary>
+    /// <returns>204 No Content | 404 Not Found</returns>
+    [HttpPut("{commentaireId}")]
+    public async Task<IActionResult> Update(int ideeId, int commentaireId, UpdateCommentaireDto dto)
     {
-        _logger.LogInformation("Suppression du commentaire {CommentaireId} sur l'idée {IdeeId}", commentaireId, ideeId);
-
-        var commentaire = await _context.Commentaires
-            .FirstOrDefaultAsync(c => c.IdCommentaire == commentaireId && c.IdIdee == ideeId);
-
-        if (commentaire is null)
-        {
-            _logger.LogWarning("Commentaire {CommentaireId} introuvable", commentaireId);
+        var succes = await _commentaireService.UpdateAsync(ideeId, commentaireId, dto);
+        if (!succes)
             return NotFound();
-        }
-
-        _context.Commentaires.Remove(commentaire);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Commentaire {CommentaireId} supprimé avec succès", commentaireId);
 
         return NoContent();
     }
 
-    // PUT api/idees/5/commentaires/3
-    [HttpPut("{commentaireId}")]
-    public async Task<IActionResult> Update(int ideeId, int commentaireId, UpdateCommentaireDto dto)
+    /// <summary>Supprime un commentaire.</summary>
+    /// <returns>204 No Content | 404 Not Found</returns>
+    [HttpDelete("{commentaireId}")]
+    public async Task<IActionResult> Delete(int ideeId, int commentaireId)
     {
-        _logger.LogInformation("Mise à jour du commentaire {CommentaireId} sur l'idée {IdeeId}", commentaireId, ideeId);
+        var succes = await _commentaireService.DeleteAsync(ideeId, commentaireId);
+        if (!succes)
+            return NotFound();
 
-        var commentaire = await _context.Commentaires
-            .FirstOrDefaultAsync(c => c.IdCommentaire == commentaireId && c.IdIdee == ideeId);
-
-        if (commentaire is null)
-    {
-        _logger.LogWarning("Commentaire {CommentaireId} introuvable pour mise à jour", commentaireId);
-        return NotFound();
+        return NoContent();
     }
-
-    commentaire.Contenu = dto.Contenu;
-    await _context.SaveChangesAsync();
-
-    _logger.LogInformation("Commentaire {CommentaireId} mis à jour avec succès", commentaireId);
-
-    return NoContent();
-}
 }

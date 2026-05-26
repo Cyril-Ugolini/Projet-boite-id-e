@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using IdeaBox.Api.Data;
+using IdeaBox.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,11 @@ builder.Services.AddSwaggerGen();
 // EF Core + PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Services métier
+builder.Services.AddScoped<IIdeeService, IdeeService>();
+builder.Services.AddScoped<ICommentaireService, CommentaireService>();
+builder.Services.AddScoped<IVoteService, VoteService>();
 
 // CORS
 builder.Services.AddCors(options =>

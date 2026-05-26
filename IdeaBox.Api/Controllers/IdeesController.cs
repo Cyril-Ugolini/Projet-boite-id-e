@@ -1,138 +1,70 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using IdeaBox.Api.Data;
 using IdeaBox.Api.DTOs;
-using IdeaBox.Api.Models;
+using IdeaBox.Api.Services;
 
 namespace IdeaBox.Api.Controllers;
 
+/// <summary>
+/// Controller REST pour la gestion des idées.
+/// Délègue la logique métier à IIdeeService.
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class IdeesController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IIdeeService _ideeService;
     private readonly ILogger<IdeesController> _logger;
 
-    public IdeesController(AppDbContext context, ILogger<IdeesController> logger)
+    /// <summary>
+    /// Constructeur — injection du service et du logger.
+    /// </summary>
+    public IdeesController(IIdeeService ideeService, ILogger<IdeesController> logger)
     {
-        _context = context;
+        _ideeService = ideeService;
         _logger = logger;
     }
 
-    // GET api/idees
+    /// <summary>Récupère la liste de toutes les idées.</summary>
+    /// <returns>200 OK — Liste de IdeeListDto</returns>
     [HttpGet]
     public async Task<ActionResult<IEnumerable<IdeeListDto>>> GetAll()
     {
-        _logger.LogInformation("Récupération de toutes les idées");
-
-        var idees = await _context.Idees
-            .Include(i => i.Commentaires)
-            .Include(i => i.Votes)
-            .OrderByDescending(i => i.DateCreation)
-            .Select(i => new IdeeListDto
-            {
-                IdIdee         = i.IdIdee,
-                Titre          = i.Titre,
-                Auteur         = i.Auteur,
-                Priorite       = i.Priorite,
-                Difficulte     = i.Difficulte,
-                NbCommentaires = i.Commentaires.Count,
-                NbVotes        = i.Votes.Count,
-                DateCreation   = i.DateCreation
-            })
-            .ToListAsync();
-
+        var idees = await _ideeService.GetAllAsync();
         return Ok(idees);
     }
 
-    // GET api/idees/5
+    /// <summary>Récupère le détail complet d'une idée.</summary>
+    /// <returns>200 OK | 404 Not Found</returns>
     [HttpGet("{id}")]
     public async Task<ActionResult<IdeeDetailDto>> GetById(int id)
     {
-        _logger.LogInformation("Récupération de l'idée {Id}", id);
-
-        var idee = await _context.Idees
-            .Include(i => i.Commentaires)
-            .Include(i => i.Votes)
-            .FirstOrDefaultAsync(i => i.IdIdee == id);
-
+        var idee = await _ideeService.GetByIdAsync(id);
         if (idee is null)
-        {
-            _logger.LogWarning("Idée {Id} introuvable", id);
             return NotFound();
-        }
-
-        var dto = new IdeeDetailDto
-        {
-            IdIdee           = idee.IdIdee,
-            Titre            = idee.Titre,
-            Contenu          = idee.Contenu,
-            Auteur           = idee.Auteur,
-            Priorite         = idee.Priorite,
-            Difficulte       = idee.Difficulte,
-            DateCreation     = idee.DateCreation,
-            DateModification = idee.DateModification,
-            NbVotes          = idee.Votes.Count,
-            Commentaires     = idee.Commentaires
-                .OrderBy(c => c.DateCreation)
-                .Select(c => new CommentaireDto
-                {
-                    IdCommentaire = c.IdCommentaire,
-                    Contenu       = c.Contenu,
-                    Auteur        = c.Auteur,
-                    DateCreation  = c.DateCreation
-                }).ToList()
-        };
-
-        return Ok(dto);
+        return Ok(idee);
     }
 
-    // POST api/idees
+    /// <summary>Crée une nouvelle idée.</summary>
+    /// <returns>201 Created | 400 Bad Request</returns>
     [HttpPost]
     public async Task<ActionResult<IdeeDetailDto>> Create(CreateIdeeDto dto)
     {
-        _logger.LogInformation("Création d'une idée par {Auteur}", dto.Auteur);
-
         var valeursPossibles = new[] { "basse", "moyenne", "haute" };
-
         if (!valeursPossibles.Contains(dto.Priorite) || !valeursPossibles.Contains(dto.Difficulte))
         {
             _logger.LogWarning("Priorité ou difficulté invalide : {Priorite} / {Difficulte}", dto.Priorite, dto.Difficulte);
             return BadRequest("Priorité ou difficulté invalide. Valeurs acceptées : basse, moyenne, haute.");
         }
 
-        var idee = new Idee
-        {
-            Titre            = dto.Titre,
-            Contenu          = dto.Contenu,
-            Auteur           = dto.Auteur,
-            Priorite         = dto.Priorite,
-            Difficulte       = dto.Difficulte,
-            DateCreation     = DateTime.UtcNow,
-            DateModification = DateTime.UtcNow
-        };
-
-        _context.Idees.Add(idee);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Idée {Id} créée avec succès", idee.IdIdee);
-
+        var idee = await _ideeService.CreateAsync(dto);
         return CreatedAtAction(nameof(GetById), new { id = idee.IdIdee }, idee);
     }
 
-    // PUT api/idees/5
+    /// <summary>Met à jour une idée existante.</summary>
+    /// <returns>204 No Content | 404 Not Found | 400 Bad Request</returns>
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateIdeeDto dto)
     {
-        _logger.LogInformation("Mise à jour de l'idée {Id}", id);
-
-        var idee = await _context.Idees.FindAsync(id);
-        if (idee is null)
-        {
-            _logger.LogWarning("Idée {Id} introuvable pour mise à jour", id);
-            return NotFound();
-        }
-
         var valeursPossibles = new[] { "basse", "moyenne", "haute" };
         if (!valeursPossibles.Contains(dto.Priorite) || !valeursPossibles.Contains(dto.Difficulte))
         {
@@ -140,36 +72,21 @@ public class IdeesController : ControllerBase
             return BadRequest("Priorité ou difficulté invalide. Valeurs acceptées : basse, moyenne, haute.");
         }
 
-        idee.Titre            = dto.Titre;
-        idee.Contenu          = dto.Contenu;
-        idee.Priorite         = dto.Priorite;
-        idee.Difficulte       = dto.Difficulte;
-        idee.DateModification = DateTime.UtcNow;
-
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Idée {Id} mise à jour avec succès", id);
+        var succes = await _ideeService.UpdateAsync(id, dto);
+        if (!succes)
+            return NotFound();
 
         return NoContent();
     }
 
-    // DELETE api/idees/5
+    /// <summary>Supprime une idée et ses commentaires/votes en cascade.</summary>
+    /// <returns>204 No Content | 404 Not Found</returns>
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        _logger.LogInformation("Suppression de l'idée {Id}", id);
-
-        var idee = await _context.Idees.FindAsync(id);
-        if (idee is null)
-        {
-            _logger.LogWarning("Idée {Id} introuvable pour suppression", id);
+        var succes = await _ideeService.DeleteAsync(id);
+        if (!succes)
             return NotFound();
-        }
-
-        _context.Idees.Remove(idee);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Idée {Id} supprimée avec succès", id);
 
         return NoContent();
     }
