@@ -115,4 +115,14 @@ updateCommentaire(ideeId: number, commentaireId: number, contenu: string): Obser
   voter(ideeId: number, vote: CreateVote): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/idees/${ideeId}/votes`, vote);
   }
+  
+  /**
+ * Supprime le vote d'un auteur sur une idée.
+ * @param ideeId - Identifiant de l'idée
+ * @param auteur - Prénom de l'auteur dont on supprime le vote
+ * @returns Observable<void> - 204 No Content
+ */
+supprimerVote(ideeId: number, auteur: string): Observable<void> {
+  return this.http.delete<void>(`${this.apiUrl}/idees/${ideeId}/votes/${auteur}`);
+}
 }

@@ -35,14 +35,30 @@
   <p-card styleClass="mb-4">
     <div [innerHTML]="idee.contenu"></div>
   </p-card>
+<!-- Vote -->
+<p-card header="👍 Voter pour cette idée" styleClass="mb-4">
+  <div class="flex flex-column gap-3">
 
-  <!-- Vote -->
-  <p-card header="👍 Voter pour cette idée" styleClass="mb-4">
-    <div class="flex gap-2 align-items-center">
-      <input pInputText [(ngModel)]="auteurVote" placeholder="Votre prénom" class="flex-1" />
-      <p-button label="Voter" icon="pi pi-thumbs-up" (onClick)="voter()" />
+    <!-- Ajouter un vote -->
+    <div>
+      <label class="font-semibold text-sm mb-1 block">Voter</label>
+      <div class="flex gap-2 align-items-center">
+        <input pInputText [(ngModel)]="auteurVote" placeholder="Votre prénom" class="flex-1" />
+        <p-button label="Voter" icon="pi pi-thumbs-up" (onClick)="voter()" />
+      </div>
     </div>
-  </p-card>
+
+    <!-- Retirer un vote -->
+    <div>
+      <label class="font-semibold text-sm mb-1 block">Retirer mon vote</label>
+      <div class="flex gap-2 align-items-center">
+        <input pInputText [(ngModel)]="auteurSupprimerVote" placeholder="Votre prénom" class="flex-1" />
+        <p-button label="Retirer" icon="pi pi-thumbs-down" severity="secondary" (onClick)="retirerVote()" />
+      </div>
+    </div>
+
+  </div>
+</p-card>
 
   <p-divider />
 

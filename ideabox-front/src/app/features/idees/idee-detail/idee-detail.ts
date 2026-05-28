@@ -52,8 +52,11 @@ export class IdeeDetailComponent implements OnInit {
     auteur: ''
   };
 
-  /** Prenom de l'auteur saisi pour voter */
+  /** Prénom de l'auteur saisi pour voter */
   auteurVote = '';
+
+  /** Prénom saisi pour retirer son vote */
+auteurSupprimerVote = '';
 
   /** Id du commentaire en cours d'edition, null si aucun */
 commentaireEnEdition: number | null = null;
@@ -205,6 +208,28 @@ sauvegarderCommentaire(commentaireId: number): void {
       this.messageService.add({ severity: 'success', summary: 'Commentaire modifie !' });
     },
     error: () => this.messageService.add({ severity: 'error', summary: 'Erreur modification' })
+  });
+}
+
+/**
+ * Supprime le vote d'un auteur sur l'idée courante.
+ * Gère le cas où le vote n'existe pas (404).
+ */
+retirerVote(): void {
+  if (!this.auteurSupprimerVote || !this.idee) return;
+
+  this.ideeService.supprimerVote(this.idee.idIdee, this.auteurSupprimerVote).subscribe({
+    next: () => {
+      this.auteurSupprimerVote = '';
+      this.loadIdee(this.idee!.idIdee);
+      this.messageService.add({ severity: 'success', summary: 'Vote retiré !' });
+    },
+    error: (err) => {
+      if (err.status === 404)
+        this.messageService.add({ severity: 'warn', summary: 'Aucun vote trouvé pour cet auteur.' });
+      else
+        this.messageService.add({ severity: 'error', summary: 'Erreur lors de la suppression du vote.' });
+    }
   });
 }
 
