@@ -1,10 +1,17 @@
 <div class="p-4 mx-auto" style="max-width: 1200px">
 
   <!-- Header -->
-  <div class="flex justify-content-between align-items-center mb-5">
-    <h1 class="m-0 text-primary">💡 Boîte à idées</h1>
+<div class="flex justify-content-between align-items-center mb-5">
+  <h1 class="m-0 text-primary">💡 Boîte à idées</h1>
+  <div class="flex gap-2 align-items-center">
+    <span class="text-color-secondary text-sm">
+      <i class="pi pi-user"></i> {{ authService.getLogin() }}
+      <span class="badge badge-info ml-2">{{ authService.getRole() }}</span>
+    </span>
     <p-button label="Nouvelle idée" icon="pi pi-plus" (onClick)="ouvrirDialog()" />
+    <p-button icon="pi pi-sign-out" severity="secondary" [rounded]="true" (onClick)="seDeconnecter()" pTooltip="Se déconnecter" />
   </div>
+</div>
 
   <!-- Grille des idées -->
   <div class="grid" *ngIf="idees.length > 0">

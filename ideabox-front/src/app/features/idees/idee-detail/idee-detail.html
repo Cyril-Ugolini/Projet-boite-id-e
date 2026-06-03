@@ -15,7 +15,7 @@
   <div class="flex align-items-center gap-3 mb-4">
     <p-button icon="pi pi-arrow-left" severity="secondary" [rounded]="true" (onClick)="retour()" />
     <h1 class="m-0 text-primary flex-1">{{ idee.titre }}</h1>
-    <p-button icon="pi pi-pencil" severity="secondary" label="Modifier" (onClick)="ouvrirEdition()" />
+    <p-button *ngIf="authService.isDev()" icon="pi pi-pencil" severity="secondary" label="Modifier" (onClick)="ouvrirEdition()" />
   </div>
 
   <!-- Tags -->
@@ -35,30 +35,31 @@
   <p-card styleClass="mb-4">
     <div [innerHTML]="idee.contenu"></div>
   </p-card>
-<!-- Vote -->
-<p-card header="👍 Voter pour cette idée" styleClass="mb-4">
-  <div class="flex flex-column gap-3">
 
-    <!-- Ajouter un vote -->
-    <div>
-      <label class="font-semibold text-sm mb-1 block">Voter</label>
-      <div class="flex gap-2 align-items-center">
-        <input pInputText [(ngModel)]="auteurVote" placeholder="Votre prénom" class="flex-1" />
-        <p-button label="Voter" icon="pi pi-thumbs-up" (onClick)="voter()" />
+  <!-- Vote -->
+  <p-card header="👍 Voter pour cette idée" styleClass="mb-4">
+    <div class="flex flex-column gap-3">
+
+      <!-- Ajouter un vote -->
+      <div>
+        <label class="font-semibold text-sm mb-1 block">Voter</label>
+        <div class="flex gap-2 align-items-center">
+          <input pInputText [(ngModel)]="auteurVote" placeholder="Votre prénom" class="flex-1" />
+          <p-button label="Voter" icon="pi pi-thumbs-up" (onClick)="voter()" />
+        </div>
       </div>
-    </div>
 
-    <!-- Retirer un vote -->
-    <div>
-      <label class="font-semibold text-sm mb-1 block">Retirer mon vote</label>
-      <div class="flex gap-2 align-items-center">
-        <input pInputText [(ngModel)]="auteurSupprimerVote" placeholder="Votre prénom" class="flex-1" />
-        <p-button label="Retirer" icon="pi pi-thumbs-down" severity="secondary" (onClick)="retirerVote()" />
+      <!-- Retirer un vote -->
+      <div>
+        <label class="font-semibold text-sm mb-1 block">Retirer mon vote</label>
+        <div class="flex gap-2 align-items-center">
+          <input pInputText [(ngModel)]="auteurSupprimerVote" placeholder="Votre prénom" class="flex-1" />
+          <p-button label="Retirer" icon="pi pi-thumbs-down" severity="secondary" (onClick)="retirerVote()" />
+        </div>
       </div>
-    </div>
 
-  </div>
-</p-card>
+    </div>
+  </p-card>
 
   <p-divider />
 
@@ -87,7 +88,7 @@
             <i class="pi pi-calendar"></i>{{ c.dateCreation | date:'dd/MM/yyyy HH:mm' }}
           </div>
         </div>
-        <div class="flex gap-1">
+        <div class="flex gap-1" *ngIf="authService.isDev()">
           <p-button
             icon="pi pi-pencil"
             severity="secondary"

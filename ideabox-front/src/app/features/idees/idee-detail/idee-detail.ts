@@ -12,6 +12,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { IdeeService } from '../../../core/services/idee.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { IdeeDetailModel, CreateCommentaire } from '../../../models/idee.model';
 import { IdeeFormComponent } from '../idee-form/idee-form';
 
@@ -19,6 +20,7 @@ import { IdeeFormComponent } from '../idee-form/idee-form';
  * Composant de detail d'une idee.
  * Affiche le contenu complet, les commentaires et les votes.
  * Permet d'ajouter/supprimer des commentaires, voter et modifier l'idee.
+ * Les actions de modification/suppression sont reservees au role dev.
  * Route : /idees/:id
  */
 @Component({
@@ -56,13 +58,13 @@ export class IdeeDetailComponent implements OnInit {
   auteurVote = '';
 
   /** Prénom saisi pour retirer son vote */
-auteurSupprimerVote = '';
+  auteurSupprimerVote = '';
 
   /** Id du commentaire en cours d'edition, null si aucun */
-commentaireEnEdition: number | null = null;
+  commentaireEnEdition: number | null = null;
 
-/** Contenu temporaire pendant l'edition */
-contenuEdition = '';
+  /** Contenu temporaire pendant l'edition */
+  contenuEdition = '';
 
   /** Controle la visibilite du dialogue d'edition */
   showEditDialog = false;
@@ -73,13 +75,15 @@ contenuEdition = '';
    * @param ideeService         - Service HTTP pour les appels API idees/commentaires/votes
    * @param confirmationService - Service PrimeNG pour les dialogues de confirmation
    * @param messageService      - Service PrimeNG pour les notifications toast
+   * @param authService         - Service d'authentification pour verifier le role (public pour le template)
    */
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private ideeService: IdeeService,
     private confirmationService: ConfirmationService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    public authService: AuthService
   ) {}
 
   /**
@@ -93,7 +97,6 @@ contenuEdition = '';
 
   /**
    * Charge une idee depuis l'API avec ses commentaires et votes.
-   * @param id - Identifiant de l'idee a charger
    */
   loadIdee(id: number): void {
     this.ideeService.getIdee(id).subscribe({
@@ -111,7 +114,6 @@ contenuEdition = '';
 
   /**
    * Callback apres modification reussie de l'idee.
-   * Recharge l'idee et affiche une notification.
    */
   onIdeeMiseAJour(): void {
     this.loadIdee(this.idee!.idIdee);
@@ -120,7 +122,6 @@ contenuEdition = '';
 
   /**
    * Soumet le formulaire d'ajout de commentaire.
-   * Verifie que le contenu et l'auteur sont renseignes avant l'envoi.
    */
   ajouterCommentaire(): void {
     if (!this.newCommentaire.contenu || !this.newCommentaire.auteur || !this.idee) return;
@@ -137,7 +138,6 @@ contenuEdition = '';
 
   /**
    * Supprime un commentaire apres confirmation.
-   * @param commentaireId - Identifiant du commentaire a supprimer
    */
   supprimerCommentaire(commentaireId: number): void {
     this.confirmationService.confirm({
@@ -155,7 +155,6 @@ contenuEdition = '';
 
   /**
    * Enregistre un vote pour l'idee courante.
-   * Gere le cas ou l'auteur a deja vote (409 Conflict).
    */
   voter(): void {
     if (!this.auteurVote || !this.idee) return;
@@ -176,62 +175,58 @@ contenuEdition = '';
   }
 
   /**
- * Active le mode edition sur un commentaire.
- * @param commentaireId - Id du commentaire a editer
- * @param contenuActuel - Contenu actuel pre-rempli dans le champ
- */
-activerEdition(commentaireId: number, contenuActuel: string): void {
-  this.commentaireEnEdition = commentaireId;
-  this.contenuEdition = contenuActuel;
-}
+   * Active le mode edition sur un commentaire.
+   */
+  activerEdition(commentaireId: number, contenuActuel: string): void {
+    this.commentaireEnEdition = commentaireId;
+    this.contenuEdition = contenuActuel;
+  }
 
-/**
- * Annule l'edition en cours sans sauvegarder.
- */
-annulerEdition(): void {
-  this.commentaireEnEdition = null;
-  this.contenuEdition = '';
-}
+  /**
+   * Annule l'edition en cours sans sauvegarder.
+   */
+  annulerEdition(): void {
+    this.commentaireEnEdition = null;
+    this.contenuEdition = '';
+  }
 
-/**
- * Sauvegarde la modification d'un commentaire.
- * @param commentaireId - Id du commentaire a modifier
- */
-sauvegarderCommentaire(commentaireId: number): void {
-  if (!this.contenuEdition || !this.idee) return;
+  /**
+   * Sauvegarde la modification d'un commentaire.
+   */
+  sauvegarderCommentaire(commentaireId: number): void {
+    if (!this.contenuEdition || !this.idee) return;
 
-  this.ideeService.updateCommentaire(this.idee.idIdee, commentaireId, this.contenuEdition).subscribe({
-    next: () => {
-      this.commentaireEnEdition = null;
-      this.contenuEdition = '';
-      this.loadIdee(this.idee!.idIdee);
-      this.messageService.add({ severity: 'success', summary: 'Commentaire modifie !' });
-    },
-    error: () => this.messageService.add({ severity: 'error', summary: 'Erreur modification' })
-  });
-}
+    this.ideeService.updateCommentaire(this.idee.idIdee, commentaireId, this.contenuEdition).subscribe({
+      next: () => {
+        this.commentaireEnEdition = null;
+        this.contenuEdition = '';
+        this.loadIdee(this.idee!.idIdee);
+        this.messageService.add({ severity: 'success', summary: 'Commentaire modifie !' });
+      },
+      error: () => this.messageService.add({ severity: 'error', summary: 'Erreur modification' })
+    });
+  }
 
-/**
- * Supprime le vote d'un auteur sur l'idée courante.
- * Gère le cas où le vote n'existe pas (404).
- */
-retirerVote(): void {
-  if (!this.auteurSupprimerVote || !this.idee) return;
+  /**
+   * Supprime le vote d'un auteur sur l'idee courante.
+   */
+  retirerVote(): void {
+    if (!this.auteurSupprimerVote || !this.idee) return;
 
-  this.ideeService.supprimerVote(this.idee.idIdee, this.auteurSupprimerVote).subscribe({
-    next: () => {
-      this.auteurSupprimerVote = '';
-      this.loadIdee(this.idee!.idIdee);
-      this.messageService.add({ severity: 'success', summary: 'Vote retiré !' });
-    },
-    error: (err) => {
-      if (err.status === 404)
-        this.messageService.add({ severity: 'warn', summary: 'Aucun vote trouvé pour cet auteur.' });
-      else
-        this.messageService.add({ severity: 'error', summary: 'Erreur lors de la suppression du vote.' });
-    }
-  });
-}
+    this.ideeService.supprimerVote(this.idee.idIdee, this.auteurSupprimerVote).subscribe({
+      next: () => {
+        this.auteurSupprimerVote = '';
+        this.loadIdee(this.idee!.idIdee);
+        this.messageService.add({ severity: 'success', summary: 'Vote retiré !' });
+      },
+      error: (err) => {
+        if (err.status === 404)
+          this.messageService.add({ severity: 'warn', summary: 'Aucun vote trouvé pour cet auteur.' });
+        else
+          this.messageService.add({ severity: 'error', summary: 'Erreur lors de la suppression du vote.' });
+      }
+    });
+  }
 
   /**
    * Navigue vers la liste des idees.
@@ -242,8 +237,6 @@ retirerVote(): void {
 
   /**
    * Retourne la severite PrimeNG correspondant au niveau donne.
-   * @param niveau - Valeur du niveau : 'basse' | 'moyenne' | 'haute'
-   * @returns Severite PrimeNG : 'success' | 'warn' | 'danger' | 'info'
    */
   getSeverity(niveau: string): 'success' | 'info' | 'warn' | 'danger' {
     switch (niveau) {

@@ -10,7 +10,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
 import { FormsModule } from '@angular/forms';
+import { TooltipModule } from 'primeng/tooltip';
 import { IdeeService } from '../../../core/services/idee.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Idee, CreateIdee } from '../../../models/idee.model';
 
 /**
@@ -32,7 +34,8 @@ import { Idee, CreateIdee } from '../../../models/idee.model';
     InputTextModule,
     TextareaModule,
     SelectModule,
-    FormsModule
+    FormsModule,
+    TooltipModule
   ],
   templateUrl: './idee-list.html',
   styleUrl: './idee-list.css'
@@ -62,12 +65,14 @@ export class IdeeListComponent implements OnInit {
   ];
 
   /**
-   * @param ideeService - Service HTTP pour les appels API idées
-   * @param router      - Service Angular pour la navigation entre les vues
+   * @param ideeService  - Service HTTP pour les appels API idées
+   * @param router       - Service Angular pour la navigation entre les vues
+   * @param authService  - Service d'authentification (public pour accès depuis le template)
    */
   constructor(
     private ideeService: IdeeService,
-    private router: Router
+    private router: Router,
+    public authService: AuthService
   ) {}
 
   /**
@@ -80,7 +85,6 @@ export class IdeeListComponent implements OnInit {
 
   /**
    * Charge toutes les idées depuis l'API.
-   * Les idées sont triées par date de création décroissante (géré côté API).
    */
   loadIdees(): void {
     this.ideeService.getIdees().subscribe({
@@ -91,7 +95,6 @@ export class IdeeListComponent implements OnInit {
 
   /**
    * Navigue vers la page de détail d'une idée.
-   * @param id - Identifiant de l'idée à afficher
    */
   ouvrirDetail(id: number): void {
     this.router.navigate(['/idees', id]);
@@ -106,8 +109,6 @@ export class IdeeListComponent implements OnInit {
 
   /**
    * Soumet le formulaire de création d'une idée.
-   * Vérifie que le titre et l'auteur sont renseignés avant l'envoi.
-   * Ferme le dialogue et recharge la liste après création.
    */
   creerIdee(): void {
     if (!this.newIdee.titre || !this.newIdee.auteur) return;
@@ -123,10 +124,14 @@ export class IdeeListComponent implements OnInit {
   }
 
   /**
+   * Déconnecte l'utilisateur et redirige vers /login.
+   */
+  seDeconnecter(): void {
+    this.authService.logout();
+  }
+
+  /**
    * Retourne la sévérité PrimeNG correspondant au niveau donné.
-   * Utilisé pour coloriser les tags priorité et difficulté.
-   * @param niveau - Valeur du niveau : 'basse' | 'moyenne' | 'haute'
-   * @returns Sévérité PrimeNG : 'success' | 'warn' | 'danger' | 'info'
    */
   getSeverity(niveau: string): 'success' | 'info' | 'warn' | 'danger' {
     switch (niveau) {

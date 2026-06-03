@@ -1,0 +1,58 @@
+<div class="flex align-items-center justify-content-center" style="min-height: 100vh; background: var(--p-surface-ground);">
+
+  <p-card styleClass="w-full" [style]="{'max-width': '420px'}">
+
+    <!-- Header -->
+    <div class="text-center mb-5">
+      <div style="font-size: 3rem; margin-bottom: 0.5rem;">💡</div>
+      <h1 class="text-primary m-0" style="font-size: 1.75rem;">Boîte à idées</h1>
+      <p class="text-color-secondary mt-2 mb-0">Connectez-vous pour continuer</p>
+    </div>
+
+    <!-- Message erreur -->
+    <p-message
+      *ngIf="erreur"
+      severity="error"
+      [text]="erreur"
+      styleClass="w-full mb-4" />
+
+    <!-- Formulaire -->
+    <div class="flex flex-column gap-3">
+
+      <div class="flex flex-column gap-1">
+        <label class="font-semibold text-sm">Login</label>
+        <input
+          pInputText
+          [(ngModel)]="credentials.login"
+          placeholder="user ou dev"
+          (keyup.enter)="seConnecter()" />
+      </div>
+
+      <div class="flex flex-column gap-1">
+        <label class="font-semibold text-sm">Mot de passe</label>
+        <input
+          pInputText
+          type="password"
+          [(ngModel)]="credentials.password"
+          placeholder="••••••••"
+          (keyup.enter)="seConnecter()" />
+      </div>
+
+      <p-button
+        label="Se connecter"
+        icon="pi pi-sign-in"
+        styleClass="w-full mt-2"
+        [loading]="chargement"
+        (onClick)="seConnecter()" />
+
+    </div>
+
+    <!-- Aide -->
+    <div class="text-center mt-4 text-color-secondary text-sm">
+      <p class="m-0"><strong>user</strong> / user123 — Vue utilisateur</p>
+      <p class="m-0"><strong>dev</strong> / dev123 — Vue développeur</p>
+    </div>
+
+  </p-card>
+
+</div>
