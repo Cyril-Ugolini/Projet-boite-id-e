@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using IdeaBox.Api.Data;
 using IdeaBox.Api.Services;
 
@@ -18,6 +21,25 @@ builder.Services.AddScoped<IIdeeService, IdeeService>();
 builder.Services.AddScoped<ICommentaireService, CommentaireService>();
 builder.Services.AddScoped<IVoteService, VoteService>();
 
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer           = true,
+            ValidateAudience         = true,
+            ValidateLifetime         = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer              = builder.Configuration["Jwt:Issuer"],
+            ValidAudience            = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey         = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 // CORS
 builder.Services.AddCors(options =>
 {
@@ -35,13 +57,23 @@ var app = builder.Build();
 
 // ── Middleware ────────────────────────────────────────────
 
+// app.UseExceptionHandler(err => err.Run(async ctx =>
+// {
+//     ctx.Response.StatusCode = 500;
+//     await ctx.Response.WriteAsJsonAsync(new
+//     {
+//         error  = "Erreur interne du serveur",
+//         status = 500
+//     });
+// }));
+
 // Gestion globale des exceptions
 app.UseExceptionHandler(err => err.Run(async ctx =>
 {
     ctx.Response.StatusCode = 500;
     await ctx.Response.WriteAsJsonAsync(new
     {
-        error = "Erreur interne du serveur",
+        error  = "Erreur interne du serveur",
         status = 500
     });
 }));
@@ -53,6 +85,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowFront");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

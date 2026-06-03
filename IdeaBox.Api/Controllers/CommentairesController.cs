@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using IdeaBox.Api.DTOs;
 using IdeaBox.Api.Services;
@@ -7,6 +8,8 @@ namespace IdeaBox.Api.Controllers;
 /// <summary>
 /// Controller REST pour la gestion des commentaires.
 /// Délègue la logique métier à ICommentaireService.
+/// POST accessible sans authentification.
+/// PUT et DELETE réservés au rôle dev.
 /// </summary>
 [ApiController]
 [Route("api/idees/{ideeId}/commentaires")]
@@ -26,6 +29,7 @@ public class CommentairesController : ControllerBase
 
     /// <summary>Ajoute un commentaire sur une idée.</summary>
     /// <returns>201 Created | 404 Not Found</returns>
+    [AllowAnonymous]
     [HttpPost]
     public async Task<ActionResult<CommentaireDto>> Create(int ideeId, CreateCommentaireDto dto)
     {
@@ -36,8 +40,9 @@ public class CommentairesController : ControllerBase
         return CreatedAtAction(nameof(Create), new { ideeId }, commentaire);
     }
 
-    /// <summary>Met à jour un commentaire existant.</summary>
+    /// <summary>Met à jour un commentaire existant. Réservé au rôle dev.</summary>
     /// <returns>204 No Content | 404 Not Found</returns>
+    [Authorize(Roles = "dev")]
     [HttpPut("{commentaireId}")]
     public async Task<IActionResult> Update(int ideeId, int commentaireId, UpdateCommentaireDto dto)
     {
@@ -48,8 +53,9 @@ public class CommentairesController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Supprime un commentaire.</summary>
+    /// <summary>Supprime un commentaire. Réservé au rôle dev.</summary>
     /// <returns>204 No Content | 404 Not Found</returns>
+    [Authorize(Roles = "dev")]
     [HttpDelete("{commentaireId}")]
     public async Task<IActionResult> Delete(int ideeId, int commentaireId)
     {
