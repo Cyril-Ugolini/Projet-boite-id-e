@@ -2,24 +2,24 @@ using IdeaBox.Api.DTOs;
 
 namespace IdeaBox.Api.Services;
 
-/// <summary>
-/// Interface du service de gestion des idées.
-/// Définit le contrat entre les controllers et la logique métier.
-/// </summary>
+/**
+* Interface du service de gestion des idées.
+* Définit le contrat entre les controllers et la logique métier.
+*/
 public interface IIdeeService
 {
-    /// <summary>Récupère la liste de toutes les idées.</summary>
+    //Récupère la liste de toutes les idées.
     Task<List<IdeeListDto>> GetAllAsync();
 
-    /// <summary>Récupère le détail d'une idée par son id.</summary>
+    //Récupère le détail d'une idée par son id.
     Task<IdeeDetailDto?> GetByIdAsync(int id);
 
-    /// <summary>Crée une nouvelle idée.</summary>
+    //Crée une nouvelle idée.
     Task<IdeeDetailDto> CreateAsync(CreateIdeeDto dto);
 
-    /// <summary>Met à jour une idée existante.</summary>
+    //Met à jour une idée existante.</summary>
     Task<bool> UpdateAsync(int id, UpdateIdeeDto dto);
 
-    /// <summary>Supprime une idée et ses commentaires/votes en cascade.</summary>
+    //Supprime une idée et ses commentaires/votes en cascade.
     Task<bool> DeleteAsync(int id);
 }

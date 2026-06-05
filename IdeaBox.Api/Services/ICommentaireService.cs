@@ -2,18 +2,18 @@ using IdeaBox.Api.DTOs;
 
 namespace IdeaBox.Api.Services;
 
-/// <summary>
-/// Interface du service de gestion des commentaires.
-/// Définit le contrat entre les controllers et la logique métier.
-/// </summary>
+/**
+* Interface du service de gestion des commentaires.
+* Définit le contrat entre les controllers et la logique métier.
+*/
 public interface ICommentaireService
 {
-    /// <summary>Ajoute un commentaire sur une idée.</summary>
+    // Ajoute un commentaire sur une idée.
     Task<CommentaireDto?> CreateAsync(int ideeId, CreateCommentaireDto dto);
 
-    /// <summary>Met à jour le contenu d'un commentaire. Retourne false si introuvable.</summary>
+    // Met à jour le contenu d'un commentaire. Retourne false si introuvable.
     Task<bool> UpdateAsync(int ideeId, int commentaireId, UpdateCommentaireDto dto);
 
-    /// <summary>Supprime un commentaire. Retourne false si introuvable.</summary>
+    // Supprime un commentaire. Retourne false si introuvable.
     Task<bool> DeleteAsync(int ideeId, int commentaireId);
 }

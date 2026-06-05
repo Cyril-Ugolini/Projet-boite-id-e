@@ -5,12 +5,12 @@ using IdeaBox.Api.Services;
 
 namespace IdeaBox.Api.Controllers;
 
-/// <summary>
-/// Controller REST pour la gestion des idées.
-/// Délègue la logique métier à IIdeeService.
-/// GET et POST accessibles sans authentification.
-/// PUT et DELETE réservés au rôle dev.
-/// </summary>
+/**
+* Controller REST pour la gestion des idées.
+* Délègue la logique métier à IIdeeService.
+* GET et POST accessibles sans authentification.
+*PUT et DELETE réservés au rôle dev.
+*/
 [ApiController]
 [Route("api/[controller]")]
 public class IdeesController : ControllerBase
@@ -18,17 +18,18 @@ public class IdeesController : ControllerBase
     private readonly IIdeeService _ideeService;
     private readonly ILogger<IdeesController> _logger;
 
-    /// <summary>
-    /// Constructeur — injection du service et du logger.
-    /// </summary>
+    /**
+    * Constructeur — injection du service et du logger.
+    */
     public IdeesController(IIdeeService ideeService, ILogger<IdeesController> logger)
     {
         _ideeService = ideeService;
         _logger = logger;
     }
 
-    /// <summary>Récupère la liste de toutes les idées.</summary>
-    /// <returns>200 OK — Liste de IdeeListDto</returns>
+    /**Récupère la liste de toutes les idées.</summary>
+    * <returns>200 OK — Liste de IdeeListDto</returns>
+    */
     [AllowAnonymous]
     [HttpGet]
     public async Task<ActionResult<IEnumerable<IdeeListDto>>> GetAll()
@@ -37,8 +38,9 @@ public class IdeesController : ControllerBase
         return Ok(idees);
     }
 
-    /// <summary>Récupère le détail complet d'une idée.</summary>
-    /// <returns>200 OK | 404 Not Found</returns>
+    /** <summary>Récupère le détail complet d'une idée.</summary>
+    * <returns>200 OK | 404 Not Found</returns>
+    */
     [AllowAnonymous]
     [HttpGet("{id}")]
     public async Task<ActionResult<IdeeDetailDto>> GetById(int id)
@@ -49,8 +51,9 @@ public class IdeesController : ControllerBase
         return Ok(idee);
     }
 
-    /// <summary>Crée une nouvelle idée.</summary>
-    /// <returns>201 Created | 400 Bad Request</returns>
+    /**Crée une nouvelle idée.</summary>
+    * <returns>201 Created | 400 Bad Request</returns>
+    */
     [AllowAnonymous]
     [HttpPost]
     public async Task<ActionResult<IdeeDetailDto>> Create(CreateIdeeDto dto)
@@ -66,8 +69,9 @@ public class IdeesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = idee.IdIdee }, idee);
     }
 
-    /// <summary>Met à jour une idée existante. Réservé au rôle dev.</summary>
-    /// <returns>204 No Content | 404 Not Found | 400 Bad Request</returns>
+    /**Met à jour une idée existante. Réservé au rôle dev.</summary>
+    * <returns>204 No Content | 404 Not Found | 400 Bad Request</returns>
+    */
     [Authorize(Roles = "dev")]
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateIdeeDto dto)
@@ -86,8 +90,9 @@ public class IdeesController : ControllerBase
         return NoContent();
     }
 
-    /// <summary>Supprime une idée et ses commentaires/votes en cascade. Réservé au rôle dev.</summary>
-    /// <returns>204 No Content | 404 Not Found</returns>
+    /**Supprime une idée et ses commentaires/votes en cascade. Réservé au rôle dev.</summary>
+    * <returns>204 No Content | 404 Not Found</returns>
+    */
     [Authorize(Roles = "dev")]
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)

@@ -5,12 +5,12 @@ using IdeaBox.Api.Services;
 
 namespace IdeaBox.Api.Controllers;
 
-/// <summary>
-/// Controller REST pour la gestion des votes.
-/// Délègue la logique métier à IVoteService.
-/// GET et POST accessibles sans authentification.
-/// DELETE réservé au rôle dev.
-/// </summary>
+/**
+* Controller REST pour la gestion des votes.
+* Délègue la logique métier à IVoteService.
+* GET et POST accessibles sans authentification.
+* DELETE réservé au rôle dev.
+*/
 [ApiController]
 [Route("api/idees/{ideeId}/votes")]
 public class VotesController : ControllerBase
@@ -18,17 +18,18 @@ public class VotesController : ControllerBase
     private readonly IVoteService _voteService;
     private readonly ILogger<VotesController> _logger;
 
-    /// <summary>
-    /// Constructeur — injection du service et du logger.
-    /// </summary>
+    /**
+    * Constructeur — injection du service et du logger.
+    */
     public VotesController(IVoteService voteService, ILogger<VotesController> logger)
     {
         _voteService = voteService;
         _logger = logger;
     }
 
-    /// <summary>Récupère le nombre de votes d'une idée.</summary>
-    /// <returns>200 OK | 404 Not Found</returns>
+    /**Récupère le nombre de votes d'une idée.</summary>
+    * <returns>200 OK | 404 Not Found</returns>
+    */
     [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetNbVotes(int ideeId)
@@ -40,8 +41,9 @@ public class VotesController : ControllerBase
         return Ok(new { nbVotes });
     }
 
-    /// <summary>Enregistre un vote pour une idée.</summary>
-    /// <returns>200 OK | 404 Not Found | 409 Conflict</returns>
+    /**Enregistre un vote pour une idée.</summary>
+    * <returns>200 OK | 404 Not Found | 409 Conflict</returns>
+    */
     [AllowAnonymous]
     [HttpPost]
     public async Task<IActionResult> Vote(int ideeId, CreateVoteDto dto)
@@ -57,8 +59,9 @@ public class VotesController : ControllerBase
         return Ok(new { message = "Vote enregistré.", nbVotes = result });
     }
 
-    /// <summary>Supprime le vote d'un auteur sur une idée. Réservé au rôle dev.</summary>
-    /// <returns>204 No Content | 404 Not Found</returns>
+    /**Supprime le vote d'un auteur sur une idée. Réservé au rôle dev.</summary>
+    * <returns>204 No Content | 404 Not Found</returns>
+    */
     [Authorize(Roles = "dev")]
     [HttpDelete("{auteur}")]
     public async Task<IActionResult> SupprimerVote(int ideeId, string auteur)
